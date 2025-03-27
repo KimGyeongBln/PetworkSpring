@@ -1,6 +1,7 @@
 package com.himedia.controllers;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,15 +14,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.himedia.repository.vo.UserVo;
+import com.himedia.services.EmailService;
 import com.himedia.services.UserService;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-
 
 @RestController
 @RequestMapping("/api/user")
@@ -30,6 +30,8 @@ public class UserController {
     private final BoardController boardController;
 	@Autowired
 	private UserService userService;
+	@Autowired
+	private EmailService emailService;
 
     UserController(BoardController boardController) {
         this.boardController = boardController;
@@ -84,7 +86,7 @@ public class UserController {
 	}
 	
 	// 로그아웃
-	@PostMapping("/logout")
+	@GetMapping("/logout")
 	public ResponseEntity<String> logout(HttpSession session) {
 	    session.invalidate(); //  세션 삭제
 	    return ResponseEntity.ok("로그아웃 성공");
@@ -126,6 +128,26 @@ public class UserController {
 			 return ResponseEntity.badRequest().body(e.getMessage());
 		 }
 	 }
+	 
+	 // 이메일 인증 후 비밀번호 변경
+	 @PostMapping("/reset-password")
+	 public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> request) {
+	     String email = request.get("email");
+	     String password = request.get("password");
+	     String code = request.get("code");
+
+	     if (!emailService.verifyCode(email, code)) {
+	         return ResponseEntity.badRequest().body("이메일 인증 코드가 유효하지 않습니다.");
+	     }
+
+	     UserVo user = new UserVo();
+	     user.setEmail(email);
+	     user.setPassword(userService.encodePassword(password));
+
+	     userService.updatePasswordByEmail(user);
+	     return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
+	 }	 
+	 
 	 
 	 @DeleteMapping("/delete")
 	 public ResponseEntity<String> deleteUser(HttpSession session) {
