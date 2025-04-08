@@ -8,14 +8,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Setter
-@Getter
+
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Builder
-public class ChatroomUserVo {
-	private Integer chatroomUserId;
-	private Integer chatroomId;
-	private Integer userId;
-	private String userName;
+public class MapVo {
+	private Integer mapId;
+	private Integer boardId;
+	private double latitude;
+	private double longitude;
 }
